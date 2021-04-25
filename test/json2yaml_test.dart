@@ -38,6 +38,10 @@ void main() {
       test('it preserves json structure', () {
         expect(loadAsJson(result), basicStringJson);
       });
+      test('it produces correct basic string field as list item', () {
+        final listResult = json2yaml(basicStringJson, nestingLevel: 1, isListItem: true);
+        expect(listResult, basicListItemYaml);
+      });
     });
 
     group('given structured data', () {
@@ -137,6 +141,7 @@ dynamic loadAsJson(String result) => json.decode(json.encode(loadYaml(result)));
 
 const basicStringJson = {'basic_string': 'basic string'};
 const basicStringYaml = 'basic_string: basic string';
+const basicListItemYaml = '- basic_string: basic string';
 
 const structuredDataJson = {
   'martin': {

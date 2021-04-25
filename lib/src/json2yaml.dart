@@ -38,24 +38,34 @@ enum YamlStyle {
 String json2yaml(
   Map<String, dynamic> json, {
   YamlStyle yamlStyle = YamlStyle.generic,
+  int nestingLevel = 0,
+  bool isListItem,
 }) =>
-    _renderToYaml(json, 0, yamlStyle);
+    _renderToYaml(json, nestingLevel, yamlStyle, isListItem: isListItem);
 
-String _renderToYaml(
-  Map<String, dynamic> json,
-  int nestingLevel,
-  YamlStyle style,
-) =>
-    json.entries
-        .map((entry) => _formatEntry(
-              entry,
-              nestingLevel,
-              style,
-            ))
-        .join('\n');
+String _renderToYaml(Map<String, dynamic> json, int nestingLevel, YamlStyle style, {bool isListItem}) {
+  final String jsonString = json.entries
+      .map((entry) => _formatEntry(
+            entry,
+            nestingLevel,
+            style,
+          ))
+      .join('\n');
 
-String _formatEntry(
-        MapEntry<String, dynamic> entry, int nesting, YamlStyle style) =>
+  if (isListItem == null || !isListItem) {
+    return jsonString;
+  } else {
+    //special case for passing in maps as single list items
+    if (nestingLevel > 0) {
+      //remove the leading spaces
+      return '-${jsonString.substring(1, jsonString.length)}';
+    } else {
+      return '-$jsonString';
+    }
+  }
+}
+
+String _formatEntry(MapEntry<String, dynamic> entry, int nesting, YamlStyle style) =>
     '${_indentation(nesting)}${entry.key}:${_formatValue(
       entry.value,
       nesting,
@@ -75,9 +85,7 @@ String _formatValue(dynamic value, int nesting, YamlStyle style) {
             (s) => '${_indentation(nesting + 1)}$s',
           ).join('\n')}';
     }
-    if (_containsSpecialCharacters(value) ||
-        (_containsFloatingPointPattern(value) &&
-            style != YamlStyle.pubspecYaml)) {
+    if (_containsSpecialCharacters(value) || (_containsFloatingPointPattern(value) && style != YamlStyle.pubspecYaml)) {
       return ' "$value"';
     }
   }
@@ -87,19 +95,15 @@ String _formatValue(dynamic value, int nesting, YamlStyle style) {
   return ' $value';
 }
 
-String _formatList(List<dynamic> list, int nesting, YamlStyle style) => list
-    .map((dynamic value) =>
-        '${_indentation(nesting)}-${_formatValue(value, nesting + 2, style)}')
-    .join('\n');
+String _formatList(List<dynamic> list, int nesting, YamlStyle style) =>
+    list.map((dynamic value) => '${_indentation(nesting)}-${_formatValue(value, nesting + 2, style)}').join('\n');
 
 String _indentation(int nesting) => _spaces(nesting * 2);
 String _spaces(int n) => ''.padRight(n, ' ');
 
 bool _isMultilineString(String s) => s.contains('\n');
 
-bool _containsFloatingPointPattern(String s) =>
-    s.contains(RegExp(r'[0-9]\.[0-9]'));
+bool _containsFloatingPointPattern(String s) => s.contains(RegExp(r'[0-9]\.[0-9]'));
 
-bool _containsSpecialCharacters(String s) =>
-    _specialCharacters.any((c) => s.contains(c));
+bool _containsSpecialCharacters(String s) => _specialCharacters.any((c) => s.contains(c));
 final _specialCharacters = r':{}[],&*#?|-<>=!%@\'.split('');
