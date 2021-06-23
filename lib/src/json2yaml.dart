@@ -39,11 +39,11 @@ String json2yaml(
   Map<String, dynamic> json, {
   YamlStyle yamlStyle = YamlStyle.generic,
   int nestingLevel = 0,
-  bool isListItem,
+  bool? isListItem,
 }) =>
     _renderToYaml(json, nestingLevel, yamlStyle, isListItem: isListItem);
 
-String _renderToYaml(Map<String, dynamic> json, int nestingLevel, YamlStyle style, {bool isListItem}) {
+String _renderToYaml(Map<String, dynamic> json, int nestingLevel, YamlStyle style, {bool? isListItem}) {
   final String jsonString = json.entries
       .map((entry) => _formatEntry(
             entry,
@@ -89,9 +89,9 @@ String _formatValue(dynamic value, int nesting, YamlStyle style) {
       return ' "$value"';
     }
   }
-  if (value == null) {
-    return '';
-  }
+  // if (value == null) {
+  //   return '';
+  // }
   return ' $value';
 }
 
@@ -99,6 +99,7 @@ String _formatList(List<dynamic> list, int nesting, YamlStyle style) =>
     list.map((dynamic value) => '${_indentation(nesting)}-${_formatValue(value, nesting + 2, style)}').join('\n');
 
 String _indentation(int nesting) => _spaces(nesting * 2);
+// ignore: avoid_redundant_argument_values
 String _spaces(int n) => ''.padRight(n, ' ');
 
 bool _isMultilineString(String s) => s.contains('\n');
